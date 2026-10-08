@@ -1,0 +1,61 @@
+CREATE DATABASE IF NOT EXISTS campus_event_manager;
+USE campus_event_manager;
+
+CREATE TABLE users (
+ id INT PRIMARY KEY AUTO_INCREMENT,
+ full_name VARCHAR(120) NOT NULL,
+ email VARCHAR(150) UNIQUE NOT NULL,
+ password_hash VARCHAR(255) NOT NULL,
+ role ENUM('STUDENT','ORGANIZER','ADMIN') DEFAULT 'STUDENT',
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE events (
+ id INT PRIMARY KEY AUTO_INCREMENT,
+ title VARCHAR(180) NOT NULL,
+ description TEXT,
+ category VARCHAR(50) NOT NULL,
+ event_date DATE NOT NULL,
+ event_time TIME NOT NULL,
+ venue VARCHAR(180) NOT NULL,
+ capacity INT NOT NULL,
+ organizer_id INT,
+ status ENUM('DRAFT','PUBLISHED','CANCELLED','COMPLETED') DEFAULT 'DRAFT',
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ FOREIGN KEY (organizer_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE TABLE registrations (
+ id INT PRIMARY KEY AUTO_INCREMENT,
+ event_id INT NOT NULL,
+ user_id INT NOT NULL,
+ status ENUM('REGISTERED','CANCELLED','ATTENDED') DEFAULT 'REGISTERED',
+ registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ UNIQUE(event_id,user_id),
+ FOREIGN KEY(event_id) REFERENCES events(id) ON DELETE CASCADE,
+ FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE announcements (
+ id INT PRIMARY KEY AUTO_INCREMENT,
+ event_id INT,
+ title VARCHAR(180) NOT NULL,
+ message TEXT NOT NULL,
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ FOREIGN KEY(event_id) REFERENCES events(id) ON DELETE CASCADE
+);
+
+CREATE TABLE feedback (
+ id INT PRIMARY KEY AUTO_INCREMENT,
+ event_id INT NOT NULL,
+ user_id INT NOT NULL,
+ rating INT NOT NULL CHECK(rating BETWEEN 1 AND 5),
+ comments TEXT,
+ created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+ FOREIGN KEY(event_id) REFERENCES events(id) ON DELETE CASCADE,
+ FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+INSERT INTO users(full_name,email,password_hash,role) VALUES
+('System Admin','admin@college.edu','demo-hash','ADMIN'),
+('Event Organizer','organizer@college.edu','demo-hash','ORGANIZER');
